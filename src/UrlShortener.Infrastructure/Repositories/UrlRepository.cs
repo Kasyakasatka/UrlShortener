@@ -17,7 +17,7 @@ namespace Infrastructure.Repositories
         private readonly ILogger<UrlRepository> _logger;
         private const string KeyspaceName = "url_shortener";
 
-        public UrlRepository(ISession session, IMapper mapper, ILogger<UrlRepository> logger) 
+        public UrlRepository(ISession session, IMapper mapper, ILogger<UrlRepository> logger)
         {
             _session = session;
             _mapper = mapper;
@@ -110,7 +110,17 @@ namespace Infrastructure.Repositories
             _logger.LogInformation("Attempting to update URL for short code: {ShortCode}", url.ShortCode);
             try
             {
-                await _mapper.UpdateAsync(url, KeyspaceName);
+                var statement = new SimpleStatement(
+                    $"UPDATE {KeyspaceName}.urls SET " +
+                    "original_url = ?, expiration_date = ?, is_active = ? " +
+                    "WHERE short_code = ?",
+                    url.OriginalUrl,
+                    url.ExpirationDate,
+                    url.IsActive,
+                    url.ShortCode 
+                );
+
+                await _session.ExecuteAsync(statement);
                 _logger.LogInformation("Successfully updated URL for short code: {ShortCode}", url.ShortCode);
             }
             catch (Exception ex)
@@ -125,7 +135,7 @@ namespace Infrastructure.Repositories
             _logger.LogInformation("Attempting to delete URL with short code: {ShortCode}", shortCode);
             try
             {
-                await _mapper.DeleteAsync<Url>($"WHERE short_code = ?", shortCode, KeyspaceName);
+                await _mapper.DeleteAsync<Url>("WHERE short_code = ?", shortCode);
                 _logger.LogInformation("Successfully deleted URL with short code: {ShortCode}", shortCode);
             }
             catch (Exception ex)

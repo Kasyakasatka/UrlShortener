@@ -5,17 +5,17 @@ using System.Linq;
 
 namespace Application.DTOs
 {
-    public class UrlDetailsDto
+    public record UrlDetailsDto
     {
        
-        public string ShortCode { get; set; } = string.Empty;
-        public string OriginalUrl { get; set; } = string.Empty;
-        public DateTimeOffset CreationTimestamp { get; set; }
-        public DateTimeOffset? ExpirationDate { get; set; }
-        public long ClickCount { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsExpired { get; set; }
-        public List<ClickAnalyticDto> ClickAnalytics { get; set; } = new List<ClickAnalyticDto>(); 
+        public string ShortCode { get; init; } = string.Empty;
+        public string OriginalUrl { get; init; } = string.Empty;
+        public DateTimeOffset CreationTimestamp { get; init; }
+        public DateTimeOffset? ExpirationDate { get; init; }
+        public long ClickCount { get; init; }
+        public bool IsActive { get; init; }
+        public bool IsExpired { get; init; }
+        public List<ClickAnalyticDto> ClickAnalytics { get; init; } = new List<ClickAnalyticDto>(); 
 
         public UrlDetailsDto() { }
 

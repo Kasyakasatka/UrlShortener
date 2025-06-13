@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace Application.Commands
 {
-    public class UpdateShortUrlCommand : IRequest
+    public record UpdateShortUrlCommand : IRequest
     {
-        public string ShortCode { get; set; }
-        public string NewOriginalUrl { get; set; }
-        public DateTime? NewExpirationDate { get; set; }
+        public string ShortCode { get; init; }
+        public string NewOriginalUrl { get; init; }
+        public DateTime? NewExpirationDate { get; init; }
     }
 }

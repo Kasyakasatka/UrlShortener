@@ -3,12 +3,12 @@ using Domain.Entities;
 
 namespace Application.DTOs
 {
-    public class ClickAnalyticDto
+    public record ClickAnalyticDto
     {
-        public string ShortCode { get; set; }
-        public DateTimeOffset ClickTimestamp { get; set; }
-        public string UserAgent { get; set; }
-        public string IpAddress { get; set; }
+        public string ShortCode { get; init; }
+        public DateTimeOffset ClickTimestamp { get; init; }
+        public string UserAgent { get; init; }
+        public string IpAddress { get; init; }
 
         public ClickAnalyticDto()
         {

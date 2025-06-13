@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Application.Commands
 {
-    public class DeleteShortUrlCommand : IRequest
+    public record DeleteShortUrlCommand : IRequest
     {
-        public string ShortCode { get; set; }
+        public string ShortCode { get; init; }
     }
 }
