@@ -1,0 +1,39 @@
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.log
+*.pdb
+*.opendb
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+
+# Rider files
+.idea/
+
+# NuGet packages
+*.nupkg
+.nuget/
+packages/
+
+# Docker
+docker-compose.override.yml # If you have a local override you don't want to commit
+.dockerignore # This file should be committed, but sometimes people add it here by mistake
+
+# Dotnet specific
+publish/
+artifacts/ # The folder created by your app for Cassandra artifacts
+
+# Test Results
+TestResults/
+
+# npm / yarn
+node_modules/
+
+# macOS specific
+.DS_Store
+
+# Windows specific
+Thumbs.db

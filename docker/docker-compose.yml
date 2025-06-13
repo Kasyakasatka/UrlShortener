@@ -1,0 +1,41 @@
+# Ключ 'version' теперь устарел и не нужен. Docker Compose сам определяет версию.
+
+services:
+  api: # <--- Здесь начинается определение сервиса 'api'
+    build: # <--- Эти строки должны быть смещены на 2 пробела относительно 'api:'
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - Cassandra__ContactPoint=cassandra
+      - Cassandra__Port=9042
+      - ASPNETCORE_URLS=http://+:80
+      - ASPNETCORE_ENVIRONMENT=Development # <--- ДОБАВЬТЕ/ПРОВЕРЬТЕ ЭТУ СТРОКУ
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    # volumes:
+    #   - ./src/UrlShortener.Api:/app
+
+  cassandra: # <--- Здесь начинается определение сервиса 'cassandra'
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=TestCluster
+      - CASSANDRA_DC=datacenter1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_STARTUP_TIMEOUT=180
+    mem_limit: 4096m # Установите лимит памяти
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh --debug --no-color -e \"describe cluster\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+
+volumes:
+  cassandra-data:
