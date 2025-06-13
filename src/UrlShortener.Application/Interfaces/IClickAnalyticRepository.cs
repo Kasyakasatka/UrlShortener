@@ -13,6 +13,6 @@ namespace Application.Interfaces
         Task AddClickAnalyticAsync(string shortCode, string ipAddress, string userAgent);
         Task AddAsync(ClickAnalytic analytic);
         Task<IEnumerable<ClickAnalytic>> GetByShortCodeAsync(string shortCode);
-        Task<long> GetClickCountAsync(string shortCode); // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
+        Task<long> GetClickCountAsync(string shortCode);
     }
 }

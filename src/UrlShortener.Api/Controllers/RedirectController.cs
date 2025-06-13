@@ -1,10 +1,10 @@
 ﻿using Application.Queries;
 using Domain.Custom_Exceptions;
 using MediatR;
-using Microsoft.AspNetCore.Mvc; // Для ControllerBase, HttpGet, ProducesResponseType, IActionResult
-using Microsoft.Extensions.Logging; // Для ILogger
-using System.Net; // Для HttpStatusCode
-using System.Threading.Tasks; // Для Task
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Api.Controllers
 {
@@ -20,15 +20,9 @@ namespace Api.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Redirects from a short code to the original URL.
-        /// </summary>
-        /// <param name="shortCode">The short code to redirect from.</param>
-        /// <returns>A 302 redirect response to the original URL or 404 if not found/expired.</returns>
-        [HttpGet("/{shortCode}")] // Маршрут остается таким же
-        [ProducesResponseType((int)HttpStatusCode.RedirectKeepVerb)] // HTTP 302
+        [HttpGet("/{shortCode}")]
+        [ProducesResponseType((int)HttpStatusCode.RedirectKeepVerb)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        // !!! ИЗМЕНЕНИЕ ЗДЕСЬ: Переименован метод Redirect в HandleRedirect !!!
         public async Task<IActionResult> HandleRedirect(string shortCode)
         {
             try
@@ -44,8 +38,6 @@ namespace Api.Controllers
                 };
                 var originalUrl = await _mediator.Send(query);
 
-                // Используем базовый метод Redirect из ControllerBase
-                // Теперь нет конфликта имен.
                 return Redirect(originalUrl);
             }
             catch (NotFoundException ex)

@@ -11,7 +11,7 @@ namespace Application.Commands
 
     public record CreateShortUrlCommand(
         string OriginalUrl,
-        string? CustomAlias = null, // nullable string для необязательных значений
-        DateTimeOffset? ExpirationDate = null // DateTimeOffset? для дат
-    ) : IRequest<UrlDetailsDto>; // Указываем, что это команда MediatR, которая возвращает UrlDetailsDto
+        string? CustomAlias = null,
+        DateTimeOffset? ExpirationDate = null
+    ) : IRequest<UrlDetailsDto>;
 }

@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Microsoft.Extensions.Logging; // Добавлено для логирования
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,18 +13,18 @@ namespace Infrastructure.Services
         private const string Alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private const int Base = 62;
         private readonly Random _random = new Random();
-        private const int ShortCodeLength = 7; // Recommended length 
+        private const int ShortCodeLength = 7;
+        private readonly ILogger<Base62ShortCodeGenerator> _logger; // Добавлено для логирования
+
+        public Base62ShortCodeGenerator(ILogger<Base62ShortCodeGenerator> logger) // Добавлен ILogger в конструктор
+        {
+            _logger = logger; // Инициализация логгера
+        }
 
         public string GenerateShortCode()
         {
-            // For a real application, you might use a more robust unique identifier
-            // like a distributed counter or a GUID-based approach to ensure uniqueness
-            // across distributed systems. For simplicity, we'll use a random approach here.
-            // A deterministic approach using an auto-incrementing counter or timestamp-based method
-            //[cite_start]// then encoding using Base62 conversion is recommended 
-            // We'll simulate this with a random number for demonstration.
-
-            long uniqueNumber = GenerateUniqueNumber(); // Simulate unique number
+            _logger.LogInformation("Attempting to generate a new short code.");
+            long uniqueNumber = GenerateUniqueNumber();
 
             var sb = new StringBuilder();
             while (uniqueNumber > 0)
@@ -32,39 +33,41 @@ namespace Infrastructure.Services
                 uniqueNumber /= Base;
             }
 
-            // Pad with 'a' if too short, or truncate if too long (though with 7 chars it's unlikely to be too long with this approach)
             while (sb.Length < ShortCodeLength)
             {
                 sb.Insert(0, 'a');
             }
 
-            //[cite_start]// Ensure generated codes meet length constraints 
-            return sb.ToString().Substring(0, ShortCodeLength);
+            string generatedCode = sb.ToString().Substring(0, ShortCodeLength);
+            _logger.LogInformation("Generated short code: {GeneratedCode}", generatedCode);
+            return generatedCode;
         }
 
         public bool IsValidShortCode(string shortCode)
         {
+            _logger.LogInformation("Validating short code: {ShortCode}", shortCode);
             if (string.IsNullOrEmpty(shortCode) || shortCode.Length != ShortCodeLength)
             {
+                _logger.LogWarning("Short code '{ShortCode}' is invalid: Null, empty, or incorrect length ({Length}).", shortCode, shortCode?.Length ?? 0);
                 return false;
             }
             foreach (char c in shortCode)
             {
                 if (!Alphabet.Contains(c))
                 {
+                    _logger.LogWarning("Short code '{ShortCode}' contains invalid character: '{InvalidChar}'.", shortCode, c);
                     return false;
                 }
             }
+            _logger.LogInformation("Short code '{ShortCode}' is valid.", shortCode);
             return true;
         }
 
         private long GenerateUniqueNumber()
         {
-            // In a production system, this would be a real unique ID, e.g., from a sequence generator,
-            // or based on a timestamp to avoid collisions in a distributed environment.
-            // For demonstration, we'll use a simple time-based approach for variety, though
-            // a global unique counter is ideal for this.
-            return DateTime.UtcNow.Ticks;
+            long number = DateTime.UtcNow.Ticks;
+            _logger.LogDebug("Generated unique number (based on Ticks): {UniqueNumber}", number);
+            return number;
         }
     }
 }

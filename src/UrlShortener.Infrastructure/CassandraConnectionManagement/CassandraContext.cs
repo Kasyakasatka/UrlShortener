@@ -23,54 +23,50 @@ namespace Infrastructure.CassandraConnectionManagement
 
         public async Task ApplyMigrations()
         {
-            _logger.LogInformation("Применение миграций Cassandra...");
+            _logger.LogInformation("Applying Cassandra migrations...");
 
-            // --- Таблица для URL-адресов ---
-            _logger.LogInformation("Удаление таблицы 'urls', если она существует, для обеспечения актуальной схемы...");
-            await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS urls;")); // !!! ИСПРАВЛЕНИЕ ОПЕЧАТКИ: EXISs -> EXISTS !!!
-            _logger.LogInformation("Таблица 'urls' удалена, если существовала.");
+            _logger.LogInformation("Dropping 'urls' table if it exists to ensure current schema...");
+            await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS urls;"));
+            _logger.LogInformation("'urls' table dropped if existed.");
 
-            _logger.LogInformation("Создание или проверка существования таблицы 'urls'...");
+            _logger.LogInformation("Creating or ensuring existence of 'urls' table...");
             await _session.ExecuteAsync(new SimpleStatement(
                 "CREATE TABLE IF NOT EXISTS urls (" +
-                "short_code text PRIMARY KEY," + // short_code теперь PRIMARY KEY
-                "id uuid," + // id теперь обычный столбец
+                "short_code text PRIMARY KEY," +
+                "id uuid," +
                 "original_url text," +
                 "creation_timestamp timestamp," +
                 "expiration_date timestamp," +
                 "is_active boolean)"));
-            _logger.LogInformation("Таблица 'urls' создана или уже существует.");
+            _logger.LogInformation("'urls' table created or already exists.");
 
-            // --- Таблица для счетчиков кликов ---
-            _logger.LogInformation("Удаление таблицы 'url_clicks', если она существует, для обеспечения актуальной схемы...");
-            await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS url_clicks;")); // Добавлено для консистентности
-            _logger.LogInformation("Таблица 'url_clicks' удалена, если существовала.");
 
-            _logger.LogInformation("Создание или проверка существования таблицы 'url_clicks' для счетчиков кликов...");
+
+            _logger.LogInformation("Dropping 'url_clicks' table if it exists to ensure current schema...");
+            await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS url_clicks;"));
+            _logger.LogInformation("'url_clicks' table dropped if existed.");
+
+            _logger.LogInformation("Creating or ensuring existence of 'url_clicks' table for click counters...");
             await _session.ExecuteAsync(new SimpleStatement(
                 "CREATE TABLE IF NOT EXISTS url_clicks (" +
                 "short_code text PRIMARY KEY," +
                 "count counter)"));
-            _logger.LogInformation("Таблица 'url_clicks' создана или уже существует.");
+            _logger.LogInformation("'url_clicks' table created or already exists.");
 
-            // --- Таблица для аналитики кликов ---
-            _logger.LogInformation("Удаление таблицы 'click_analytics', если она существует, для обеспечения актуальной схемы...");
-            await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS click_analytics;")); // Добавлено для консистентности
-            _logger.LogInformation("Таблица 'click_analytics' удалена, если существовала.");
+            _logger.LogInformation("Dropping 'click_analytics' table if it exists to ensure current schema...");
+            await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS click_analytics;"));
+            _logger.LogInformation("'click_analytics' table dropped if existed.");
 
-            _logger.LogInformation("Создание или проверка существования таблицы 'click_analytics'...");
+            _logger.LogInformation("Creating or ensuring existence of 'click_analytics' table...");
             await _session.ExecuteAsync(new SimpleStatement(
-                 "CREATE TABLE IF NOT EXISTS click_analytics (" +
-                 "short_code text," +
-                 "click_timestamp timestamp," + // Используем timestamp для DateTimeOffset
-                 "ip_address text," +
-                 "user_agent text," +
-                 "PRIMARY KEY (short_code, click_timestamp)" + // СОСТАВНОЙ ПЕРВИЧНЫЙ КЛЮЧ
-                 ") WITH CLUSTERING ORDER BY (click_timestamp DESC);"));
-            _logger.LogInformation("Таблица 'click_analytics' создана или уже существует.");
+                   "CREATE TABLE IF NOT EXISTS click_analytics (" +
+                   "short_code text," +
+                   "click_timestamp timestamp," +
+                   "ip_address text," +
+                   "user_agent text," +
+                   "PRIMARY KEY (short_code, click_timestamp)" +
+                   ") WITH CLUSTERING ORDER BY (click_timestamp DESC);"));
+            _logger.LogInformation("'click_analytics' table created or already exists.");
         }
     }
 }
-
-    
-

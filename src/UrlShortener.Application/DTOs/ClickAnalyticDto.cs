@@ -1,5 +1,5 @@
 ﻿using System;
-using Domain.Entities; // Добавляем, чтобы иметь доступ к ClickAnalytic entity
+using Domain.Entities;
 
 namespace Application.DTOs
 {
@@ -10,15 +10,12 @@ namespace Application.DTOs
         public string UserAgent { get; set; }
         public string IpAddress { get; set; }
 
-        // Конструктор без параметров для десериализации (нужен для некоторых сценариев)
         public ClickAnalyticDto()
         {
-            ShortCode = string.Empty; // Инициализируем не-nullable строки
+            ShortCode = string.Empty;
             UserAgent = string.Empty;
             IpAddress = string.Empty;
         }
-
-        // Конструктор для инициализации всех свойств (если понадобится)
         public ClickAnalyticDto(string shortCode, DateTimeOffset clickTimestamp, string userAgent, string ipAddress)
         {
             ShortCode = shortCode;
@@ -27,7 +24,6 @@ namespace Application.DTOs
             IpAddress = ipAddress;
         }
 
-        // !!! НОВЫЙ СТАТИЧЕСКИЙ МЕТОД: FromEntity !!!
         public static ClickAnalyticDto FromEntity(ClickAnalytic entity)
         {
             return new ClickAnalyticDto

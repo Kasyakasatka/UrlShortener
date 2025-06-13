@@ -6,17 +6,17 @@ using Application.Interfaces;
 using Infrastructure.CassandraConnectionManagement;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
-using Cassandra; // Для ICluster и ISession
-using Cassandra.Mapping; // Для IMapper
-using Microsoft.Extensions.DependencyInjection; // Для методов расширения AddSingleton, AddScoped и т.д.
-using Microsoft.Extensions.Hosting; // Для AddHostedService
+using Cassandra; 
+using Cassandra.Mapping; 
+using Microsoft.Extensions.DependencyInjection; 
+using Microsoft.Extensions.Hosting; 
 using Microsoft.Extensions.Logging;
-using System.Threading; // Для Thread.Sleep
-using System.Net.Sockets; // Для SocketException
+using System.Threading; 
+using System.Net.Sockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавляем сервисы в контейнер.
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -28,9 +28,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-// --- НАЧАЛО: ПРАВИЛЬНАЯ РЕГИСТРАЦИЯ CASSANDRA И СВЯЗАННЫХ СЕРВИСОВ ---
-
-// 1. Регистрация ICluster
 var contactPoints = builder.Configuration.GetSection("Cassandra:ContactPoints").Get<string[]>() ?? new[] { "cassandra" };
 var cassandraPort = builder.Configuration.GetValue<int>("Cassandra:Port", 9042);
 
@@ -42,7 +39,6 @@ builder.Services.AddSingleton<ICluster>(sp =>
         .Build();
 });
 
-// 2. Регистрация ISession с повторными попытками
 var keyspaceName = builder.Configuration.GetValue<string>("Cassandra:Keyspace") ?? "url_shortener";
 builder.Services.AddSingleton<Cassandra.ISession>(sp =>
 {
@@ -50,7 +46,7 @@ builder.Services.AddSingleton<Cassandra.ISession>(sp =>
     var logger = sp.GetRequiredService<ILogger<Program>>();
 
     int maxRetries = 10;
-    int retryDelayMs = 5000; // 5 секунд
+    int retryDelayMs = 5000; //5 seconds
 
     for (int i = 0; i < maxRetries; i++)
     {
@@ -77,10 +73,8 @@ builder.Services.AddSingleton<Cassandra.ISession>(sp =>
 });
 
 
-// 3. Регистрация CassandraContext (регистрируем для DI)
 builder.Services.AddSingleton<CassandraContext>();
 
-// 4. Регистрация IMapper (для Cassandra.Mapping)
 builder.Services.AddSingleton<IMapper>(sp => new Mapper(sp.GetRequiredService<Cassandra.ISession>(),
     new MappingConfiguration().Define(
         new Map<Domain.Entities.Url>()
@@ -92,11 +86,11 @@ builder.Services.AddSingleton<IMapper>(sp => new Mapper(sp.GetRequiredService<Ca
             .Column(u => u.CreationTimestamp, cm => cm.WithName("creation_timestamp"))
             .Column(u => u.ExpirationDate, cm => cm.WithName("expiration_date"))
             .Column(u => u.IsActive, cm => cm.WithName("is_active")),
-        // !!! ИЗМЕНЕНИЕ ЗДЕСЬ: ДОБАВЛЕН МАППИНГ ДЛЯ ClickAnalytic !!!
+  
         new Map<Domain.Entities.ClickAnalytic>()
-            .TableName("click_analytics") // Явно указываем имя таблицы
-            .PartitionKey(ca => ca.ShortCode) // Указываем первичный ключ
-            .ClusteringKey(ca => ca.ClickTimestamp) // Указываем ключ кластеризации
+            .TableName("click_analytics") 
+            .PartitionKey(ca => ca.ShortCode) 
+            .ClusteringKey(ca => ca.ClickTimestamp) 
             .Column(ca => ca.ShortCode, cm => cm.WithName("short_code"))
             .Column(ca => ca.ClickTimestamp, cm => cm.WithName("click_timestamp"))
             .Column(ca => ca.IpAddress, cm => cm.WithName("ip_address"))
@@ -105,17 +99,9 @@ builder.Services.AddSingleton<IMapper>(sp => new Mapper(sp.GetRequiredService<Ca
 ));
 
 
-// --- КОНЕЦ: ПРАВИЛЬНАЯ РЕГИСТРАЦИЯ CASSANDRA И СВЯЗАННЫХ СЕРВИСОВ ---
-
-
-// Регистрация репозиториев
 builder.Services.AddScoped<IUrlRepository, UrlRepository>();
 builder.Services.AddScoped<IClickAnalyticRepository, ClickAnalyticRepository>();
-
-// Регистрация сервисов
 builder.Services.AddTransient<IShortCodeGenerator, Base62ShortCodeGenerator>();
-
-// Добавляем MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     Assembly.GetExecutingAssembly(),
     typeof(Application.Interfaces.IUrlRepository).Assembly
@@ -134,7 +120,6 @@ builder.Services.AddSwaggerGen(c =>
     }
 });
 
-// Добавляем фоновый сервис
 builder.Services.AddHostedService<ExpirationBackgroundService>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<ExpirationBackgroundService>>();
@@ -144,8 +129,6 @@ builder.Services.AddHostedService<ExpirationBackgroundService>(sp =>
 });
 
 var app = builder.Build();
-
-// Применяем миграции Cassandra при запуске
 using (var scope = app.Services.CreateScope())
 {
     var serviceProvider = scope.ServiceProvider;
@@ -156,8 +139,8 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogInformation("Attempting to create a temporary Cassandra connection for keyspace and table migrations...");
 
-        int maxMigrationRetries = 20; // Увеличиваем количество попыток для миграций
-        int migrationRetryDelayMs = 5000; // 5 секунд
+        int maxMigrationRetries = 20;
+        int migrationRetryDelayMs = 5000;
 
         for (int i = 0; i < maxMigrationRetries; i++)
         {
@@ -221,8 +204,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
-// Настраиваем конвейер HTTP-запросов.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

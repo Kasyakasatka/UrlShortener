@@ -2,7 +2,6 @@
 using Cassandra;
 using Cassandra.Mapping;
 using Domain.Entities;
-using Infrastructure.CassandraConnectionManagement;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,8 +20,7 @@ namespace Infrastructure.Services
         private Cassandra.ISession _session;
         private readonly IMapper _mapper;
 
-        // Константа для имени keyspace
-        private const string KeyspaceName = "url_shortener"; // Оставляем, если нужна для других запросов
+        private const string KeyspaceName = "url_shortener";
 
         public ExpirationBackgroundService(ILogger<ExpirationBackgroundService> logger, Cassandra.ISession session, IMapper mapper)
         {
@@ -37,7 +35,7 @@ namespace Infrastructure.Services
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // Проверяем каждый час
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
 
                 try
                 {
@@ -56,7 +54,6 @@ namespace Infrastructure.Services
         {
             _logger.LogInformation("Checking for expired URLs...");
 
-            // Этот запрос уже явно указывает keyspace.tablename, так что он корректен.
             var expiredUrls = await _mapper.FetchAsync<Url>(
                 $"SELECT * FROM {KeyspaceName}.urls WHERE is_active = true AND expiration_date <= ?",
                 DateTimeOffset.UtcNow);
@@ -64,8 +61,7 @@ namespace Infrastructure.Services
             foreach (var url in expiredUrls)
             {
                 _logger.LogInformation($"Deactivating expired URL: {url.ShortCode}");
-                url.IsActive = false; // Помечаем как неактивную
-                // !!! ИЗМЕНЕНИЕ ЗДЕСЬ: Удалили KeyspaceName из UpdateAsync !!!
+                url.IsActive = false;
                 await _mapper.UpdateAsync(url);
             }
 
