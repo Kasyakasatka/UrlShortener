@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces;
-using Microsoft.Extensions.Logging; // Добавлено для логирования
+using Microsoft.Extensions.Logging; 
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +14,11 @@ namespace Infrastructure.Services
         private const int Base = 62;
         private readonly Random _random = new Random();
         private const int ShortCodeLength = 7;
-        private readonly ILogger<Base62ShortCodeGenerator> _logger; // Добавлено для логирования
+        private readonly ILogger<Base62ShortCodeGenerator> _logger;
 
-        public Base62ShortCodeGenerator(ILogger<Base62ShortCodeGenerator> logger) // Добавлен ILogger в конструктор
+        public Base62ShortCodeGenerator(ILogger<Base62ShortCodeGenerator> logger)
         {
-            _logger = logger; // Инициализация логгера
+            _logger = logger;
         }
 
         public string GenerateShortCode()
