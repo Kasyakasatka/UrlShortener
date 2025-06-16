@@ -28,7 +28,7 @@ namespace Application.Handlers
             if (url == null)
             {
                 _logger.LogWarning("URL with short code '{ShortCode}' not found for deletion.", request.ShortCode);
-                throw new NotFoundException(nameof(Domain.Entities.Url), request.ShortCode);
+                throw new NotFoundException(nameof(Url), request.ShortCode);
             }
 
             await _urlRepository.DeleteUrlAsync(request.ShortCode);

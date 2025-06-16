@@ -9,10 +9,10 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using Cassandra;
 using Cassandra.Mapping;
-using System; 
+using System;
 using System.Threading;
 
-namespace UrlShortener.Api.Extensions
+namespace Api.Extensions
 {
     public static class ServiceCollectionExtensions
     {
@@ -66,15 +66,16 @@ namespace UrlShortener.Api.Extensions
 
             services.AddSingleton<IMapper>(sp => new Mapper(sp.GetRequiredService<Cassandra.ISession>(),
                 new MappingConfiguration().Define(
-                    new Map<Domain.Entities.Url>()
+                    new Map<Url>()
                         .TableName("urls")
-                        .PartitionKey(u => u.ShortCode)
-                        .Column(u => u.Id, cm => cm.WithName("id"))
+                     
+                        .PartitionKey(u => u.ExpirationBucket, u => u.IsActive) 
                         .Column(u => u.ShortCode, cm => cm.WithName("short_code"))
                         .Column(u => u.OriginalUrl, cm => cm.WithName("original_url"))
                         .Column(u => u.CreationTimestamp, cm => cm.WithName("creation_timestamp"))
                         .Column(u => u.ExpirationDate, cm => cm.WithName("expiration_date"))
-                        .Column(u => u.IsActive, cm => cm.WithName("is_active")),
+                        .Column(u => u.IsActive, cm => cm.WithName("is_active"))
+                        .Column(u => u.ExpirationBucket, cm => cm.WithName("expiration_bucket")),
                     new Map<Domain.Entities.ClickAnalytic>()
                         .TableName("click_analytics")
                         .PartitionKey(ca => ca.ShortCode)
@@ -88,7 +89,9 @@ namespace UrlShortener.Api.Extensions
 
             services.AddScoped<IUrlRepository, UrlRepository>();
             services.AddScoped<IClickAnalyticRepository, ClickAnalyticRepository>();
+
             services.AddTransient<IShortCodeGenerator, Base62ShortCodeGenerator>();
+
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
                 typeof(Application.Interfaces.IUrlRepository).Assembly,
                 typeof(Application.Handlers.RedirectUrlQueryHandler).Assembly

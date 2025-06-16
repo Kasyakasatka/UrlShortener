@@ -32,7 +32,7 @@ namespace Application.Handlers
             if (url == null || !url.IsActive || url.IsExpired())
             {
                 _logger.LogWarning("URL with short code '{ShortCode}' not found, inactive, or expired.", request.ShortCode);
-                throw new NotFoundException(nameof(Domain.Entities.Url), request.ShortCode);
+                throw new NotFoundException(nameof(Url), request.ShortCode);
             }
 
             _ = Task.Run(async () =>

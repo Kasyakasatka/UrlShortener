@@ -31,7 +31,7 @@ namespace Application.Handlers
 
             if (url == null || !url.IsActive || url.IsExpired())
             {
-                throw new NotFoundException(nameof(Domain.Entities.Url), request.ShortCode);
+                throw new NotFoundException(nameof(Url), request.ShortCode);
             }
 
             var analytics = await _clickAnalyticRepository.GetByShortCodeAsync(request.ShortCode);

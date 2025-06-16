@@ -10,5 +10,6 @@ namespace Application.Interfaces
     {
         string GenerateShortCode();
         bool IsValidShortCode(string shortCode);
+        int ShortCodeLength { get; }
     }
 }

@@ -1,52 +1,32 @@
-﻿using System;
-
-namespace Domain.Entities
+﻿public class Url
 {
-    public class Url
+    public string ShortCode { get; set; }
+    public string OriginalUrl { get; set; }
+    public DateTimeOffset CreationTimestamp { get; set; }
+    public DateTimeOffset? ExpirationDate { get; set; }
+    public bool IsActive { get; set; }
+    public string ExpirationBucket { get; set; }
+    public Url() { }
+
+    public Url(string shortCode, string originalUrl, DateTimeOffset? expirationDate = null)
     {
-        public Guid? Id { get; set; }
-        public string ShortCode { get; set; }
-        public string OriginalUrl { get; set; }
-        public DateTimeOffset CreationTimestamp { get; set; }
-        public DateTimeOffset? ExpirationDate { get; set; }
-        public bool IsActive { get; set; }
+        ShortCode = shortCode;
+        OriginalUrl = originalUrl;
+        CreationTimestamp = DateTimeOffset.UtcNow;
+        ExpirationDate = expirationDate;
+        IsActive = true;
+        ExpirationBucket = expirationDate.HasValue ? expirationDate.Value.ToString("yyyy-MM-dd") : "never_expires";
+    }
 
-        public Url()
-        {
-          
-        }
+    public void Update(string newOriginalUrl, DateTimeOffset? newExpirationDate)
+    {
+        OriginalUrl = newOriginalUrl;
+        ExpirationDate = newExpirationDate;
+        ExpirationBucket = newExpirationDate.HasValue ? newExpirationDate.Value.ToString("yyyy-MM-dd") : "never_expires";
+    }
 
-        public Url(string shortCode, string originalUrl, DateTimeOffset? expirationDate)
-        {
-            Id = Guid.NewGuid();
-            ShortCode = shortCode;
-            OriginalUrl = originalUrl;
-            CreationTimestamp = DateTimeOffset.UtcNow;
-            ExpirationDate = expirationDate?.ToUniversalTime();
-            IsActive = true;
-        }
-        public void Update(string newOriginalUrl, DateTimeOffset? newExpirationDate)
-        {
-            if (!string.IsNullOrWhiteSpace(newOriginalUrl))
-            {
-                OriginalUrl = newOriginalUrl;
-            }
-          
-            if (newExpirationDate.HasValue)
-            {
-                ExpirationDate = newExpirationDate.Value;
-             
-                if (newExpirationDate.Value > DateTimeOffset.UtcNow)
-                {
-                    IsActive = true;
-                }
-            }
-           
-        }
-
-        public bool IsExpired()
-        {
-            return ExpirationDate.HasValue && ExpirationDate.Value <= DateTimeOffset.UtcNow;
-        }
+    public bool IsExpired()
+    {
+        return ExpirationDate.HasValue && ExpirationDate.Value <= DateTimeOffset.UtcNow;
     }
 }

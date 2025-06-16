@@ -1,8 +1,8 @@
-﻿using Cassandra;
+﻿using Api.Extensions;
+using Cassandra;
 using Infrastructure.CassandraConnectionManagement;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using UrlShortener.Api.Extensions;
 using UrlShortener.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +16,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "API Сокращения URL", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "URL Shortener", Version = "v1" });
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))

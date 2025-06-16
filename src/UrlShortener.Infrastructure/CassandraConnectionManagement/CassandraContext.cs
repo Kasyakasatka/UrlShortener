@@ -24,23 +24,22 @@ namespace Infrastructure.CassandraConnectionManagement
         public async Task ApplyMigrations()
         {
             _logger.LogInformation("Applying Cassandra migrations...");
-
             _logger.LogInformation("Dropping 'urls' table if it exists to ensure current schema...");
             await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS urls;"));
             _logger.LogInformation("'urls' table dropped if existed.");
 
-            _logger.LogInformation("Creating or ensuring existence of 'urls' table...");
+            _logger.LogInformation("Creating or ensuring existence of 'urls' table with new schema (expiration_bucket)...");
             await _session.ExecuteAsync(new SimpleStatement(
                 "CREATE TABLE IF NOT EXISTS urls (" +
-                "short_code text PRIMARY KEY," +
-                "id uuid," +
+                "short_code text," +
                 "original_url text," +
                 "creation_timestamp timestamp," +
                 "expiration_date timestamp," +
-                "is_active boolean)"));
+                "is_active boolean," +
+                "expiration_bucket text," + 
+                           
+                "PRIMARY KEY ((expiration_bucket, is_active), short_code))"));
             _logger.LogInformation("'urls' table created or already exists.");
-
-
 
             _logger.LogInformation("Dropping 'url_clicks' table if it exists to ensure current schema...");
             await _session.ExecuteAsync(new SimpleStatement("DROP TABLE IF EXISTS url_clicks;"));

@@ -10,11 +10,13 @@ namespace Infrastructure.Services
 {
     public class Base62ShortCodeGenerator : IShortCodeGenerator
     {
-        private const string Alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private const string Alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private const int Base = 62;
-        private readonly Random _random = new Random();
-        private const int ShortCodeLength = 7;
+        private const int FixedShortCodeLength = 7; 
+        private readonly Random _random = new Random(); 
         private readonly ILogger<Base62ShortCodeGenerator> _logger;
+
+        public int ShortCodeLength => FixedShortCodeLength;
 
         public Base62ShortCodeGenerator(ILogger<Base62ShortCodeGenerator> logger)
         {
@@ -23,32 +25,23 @@ namespace Infrastructure.Services
 
         public string GenerateShortCode()
         {
-            _logger.LogInformation("Attempting to generate a new short code.");
-            long uniqueNumber = GenerateUniqueNumber();
-
-            var sb = new StringBuilder();
-            while (uniqueNumber > 0)
+            _logger.LogInformation("Attempting to generate a new random fixed-length short code.");
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < FixedShortCodeLength; i++)
             {
-                sb.Insert(0, Alphabet[(int)(uniqueNumber % Base)]);
-                uniqueNumber /= Base;
+                sb.Append(Alphabet[_random.Next(Base)]); 
             }
-
-            while (sb.Length < ShortCodeLength)
-            {
-                sb.Insert(0, 'a');
-            }
-
-            string generatedCode = sb.ToString().Substring(0, ShortCodeLength);
-            _logger.LogInformation("Generated short code: {GeneratedCode}", generatedCode);
+            string generatedCode = sb.ToString();
+            _logger.LogInformation("Generated random short code: {GeneratedCode}", generatedCode);
             return generatedCode;
         }
 
         public bool IsValidShortCode(string shortCode)
         {
             _logger.LogInformation("Validating short code: {ShortCode}", shortCode);
-            if (string.IsNullOrEmpty(shortCode) || shortCode.Length != ShortCodeLength)
+            if (string.IsNullOrEmpty(shortCode) || shortCode.Length != FixedShortCodeLength) 
             {
-                _logger.LogWarning("Short code '{ShortCode}' is invalid: Null, empty, or incorrect length ({Length}).", shortCode, shortCode?.Length ?? 0);
+                _logger.LogWarning("Short code '{ShortCode}' is invalid: Null, empty, or incorrect length ({Length}). Expected {ExpectedLength}.", shortCode, shortCode?.Length ?? 0, FixedShortCodeLength);
                 return false;
             }
             foreach (char c in shortCode)
@@ -63,11 +56,5 @@ namespace Infrastructure.Services
             return true;
         }
 
-        private long GenerateUniqueNumber()
-        {
-            long number = DateTime.UtcNow.Ticks;
-            _logger.LogDebug("Generated unique number (based on Ticks): {UniqueNumber}", number);
-            return number;
-        }
     }
 }

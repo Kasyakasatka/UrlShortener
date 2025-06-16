@@ -31,14 +31,14 @@ namespace Infrastructure.Repositories
             {
                 var statement = new SimpleStatement(
                     $"INSERT INTO {KeyspaceName}.urls " +
-                    "(short_code, id, original_url, creation_timestamp, expiration_date, is_active) " +
+                    "(short_code, original_url, creation_timestamp, expiration_date, is_active, expiration_bucket) " + 
                     "VALUES (?, ?, ?, ?, ?, ?)",
                     url.ShortCode,
-                    url.Id,
                     url.OriginalUrl,
                     url.CreationTimestamp,
                     url.ExpirationDate,
-                    url.IsActive);
+                    url.IsActive,
+                    url.ExpirationBucket);
 
                 await _session.ExecuteAsync(statement);
                 _logger.LogInformation("Successfully created URL with short code: {ShortCode}", url.ShortCode);
@@ -56,8 +56,8 @@ namespace Infrastructure.Repositories
             try
             {
                 var statement = new SimpleStatement(
-                    $"SELECT id, short_code, original_url, creation_timestamp, expiration_date, is_active " +
-                    $"FROM {KeyspaceName}.urls WHERE short_code = ?", shortCode);
+                    $"SELECT short_code, original_url, creation_timestamp, expiration_date, is_active, expiration_bucket " +
+                    $"FROM {KeyspaceName}.urls WHERE short_code = ? ALLOW FILTERING", shortCode);
 
                 var rowSet = await _session.ExecuteAsync(statement);
                 var row = rowSet.FirstOrDefault();
@@ -70,12 +70,12 @@ namespace Infrastructure.Repositories
 
                 var url = new Url
                 {
-                    Id = row.GetValue<Guid?>("id"),
                     ShortCode = row.GetValue<string>("short_code"),
                     OriginalUrl = row.GetValue<string>("original_url"),
                     CreationTimestamp = row.GetValue<DateTimeOffset>("creation_timestamp"),
                     ExpirationDate = row.GetValue<DateTimeOffset?>("expiration_date"),
-                    IsActive = row.GetValue<bool>("is_active")
+                    IsActive = row.GetValue<bool>("is_active"),
+                    ExpirationBucket = row.GetValue<string>("expiration_bucket")
                 };
                 _logger.LogInformation("Successfully retrieved URL for short code: {ShortCode}", shortCode);
                 return url;
@@ -92,7 +92,7 @@ namespace Infrastructure.Repositories
             _logger.LogInformation("Checking if short code '{ShortCode}' exists.", shortCode);
             try
             {
-                var query = new SimpleStatement($"SELECT short_code FROM {KeyspaceName}.urls WHERE short_code = ?", shortCode);
+                var query = new SimpleStatement($"SELECT short_code FROM {KeyspaceName}.urls WHERE short_code = ? ALLOW FILTERING", shortCode);
                 var rowSet = await _session.ExecuteAsync(query);
                 bool exists = rowSet.Any();
                 _logger.LogInformation("Short code '{ShortCode}' exists: {Exists}", shortCode, exists);
@@ -110,17 +110,7 @@ namespace Infrastructure.Repositories
             _logger.LogInformation("Attempting to update URL for short code: {ShortCode}", url.ShortCode);
             try
             {
-                var statement = new SimpleStatement(
-                    $"UPDATE {KeyspaceName}.urls SET " +
-                    "original_url = ?, expiration_date = ?, is_active = ? " +
-                    "WHERE short_code = ?",
-                    url.OriginalUrl,
-                    url.ExpirationDate,
-                    url.IsActive,
-                    url.ShortCode 
-                );
-
-                await _session.ExecuteAsync(statement);
+                await _mapper.UpdateAsync(url);
                 _logger.LogInformation("Successfully updated URL for short code: {ShortCode}", url.ShortCode);
             }
             catch (Exception ex)
@@ -135,8 +125,21 @@ namespace Infrastructure.Repositories
             _logger.LogInformation("Attempting to delete URL with short code: {ShortCode}", shortCode);
             try
             {
-                await _mapper.DeleteAsync<Url>("WHERE short_code = ?", shortCode);
-                _logger.LogInformation("Successfully deleted URL with short code: {ShortCode}", shortCode);
+                var urlToDelete = await GetUrlByShortCodeAsync(shortCode);
+                if (urlToDelete != null)
+                {
+                    await _mapper.DeleteAsync<Url>(
+                        $"WHERE expiration_bucket = ? AND is_active = ? AND short_code = ?",
+                        urlToDelete.ExpirationBucket,
+                        urlToDelete.IsActive,
+                        urlToDelete.ShortCode
+                    );
+                    _logger.LogInformation("Successfully deleted URL with short code: {ShortCode}", shortCode);
+                }
+                else
+                {
+                    _logger.LogWarning("Attempted to delete non-existent URL with short code: {ShortCode}", shortCode);
+                }
             }
             catch (Exception ex)
             {

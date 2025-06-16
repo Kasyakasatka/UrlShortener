@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Domain.Entities;
 
 namespace Application.Handlers
 {
@@ -30,7 +31,7 @@ namespace Application.Handlers
                 if (url == null)
                 {
                     _logger.LogWarning("URL with short code '{ShortCode}' not found for update.", request.ShortCode);
-                    throw new NotFoundException(nameof(Domain.Entities.Url), request.ShortCode);
+                    throw new NotFoundException(nameof(Url), request.ShortCode);
                 }
 
                 if (request.NewExpirationDate.HasValue && request.NewExpirationDate.Value < DateTimeOffset.UtcNow)
